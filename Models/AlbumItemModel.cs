@@ -1,11 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 
 namespace RankingApp.Models
 {
    
-    public class ItemModel 
+    public class AlbumItemModel 
     {
         public int Id { get; set; }
         public string Title { get; set; }

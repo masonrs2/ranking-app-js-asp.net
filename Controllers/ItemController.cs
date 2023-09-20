@@ -1,42 +1,124 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using RankingApp.Models;
 
-namespace RankingApp.Controllers
+namespace TutApp.Controllers
 {
+    [Route("api/[controller]")]
     [ApiController]
-    [Route("[controller]")]
     public class ItemController : ControllerBase
     {
-        private static readonly IEnumerable<ItemModel> Items = new[]
-        {
-            new ItemModel{Id =1, Title = "The Godfather", ImageId=1, Ranking=0,ItemType=1 },
-            new ItemModel{Id =2, Title = "Highlander", ImageId=2, Ranking=0,ItemType=1 },
-            new ItemModel{Id =3, Title = "Highlander II", ImageId=3, Ranking=0,ItemType=1 },
-            new ItemModel{Id =4, Title = "The Last of the Mohicans", ImageId=4, Ranking=0,ItemType=1 },
-            new ItemModel{Id =5, Title = "Police Academy 6", ImageId=5, Ranking=0,ItemType=1 },
-            new ItemModel{Id =6, Title = "Rear Window", ImageId=6, Ranking=0,ItemType=1 },
-            new ItemModel{Id =7, Title = "Road House", ImageId=7, Ranking=0,ItemType=1 },
-            new ItemModel{Id =8, Title = "The Shawshank Redemption", ImageId=8, Ranking=0,ItemType=1 },
-            new ItemModel{Id =9, Title = "Star Treck IV", ImageId=9, Ranking=0,ItemType=1 },
-            new ItemModel{Id =10, Title = "Superman 4", ImageId=10, Ranking=0,ItemType=1 },
-            new ItemModel{Id = 11, Title = "Abbey Road", ImageId=11, Ranking=0,ItemType=2 },
-            new ItemModel{Id = 12, Title = "Adrenalize", ImageId=12, Ranking=0,ItemType=2 },
-            new ItemModel{Id = 13, Title = "Back in Black", ImageId=13, Ranking=0,ItemType=2 },
-            new ItemModel{Id = 14, Title = "Enjoy the Silence", ImageId=14, Ranking=0,ItemType=2 },
-            new ItemModel{Id = 15, Title = "Parachutes", ImageId=15, Ranking=0,ItemType=2 },
-            new ItemModel{Id = 16, Title = "Ride the Lightning", ImageId=16, Ranking=0,ItemType=2 },
-            new ItemModel{Id = 17, Title = "Rock or Bust", ImageId=17, Ranking=0,ItemType=2 },
-            new ItemModel{Id = 18, Title = "Rust in Peace", ImageId=18, Ranking=0,ItemType=2 },
-            new ItemModel{Id = 19, Title = "St. Anger", ImageId=19, Ranking=0,ItemType=2 },
-            new ItemModel{Id = 20, Title = "The Final Countdown", ImageId=20, Ranking=0,ItemType=2 }
+        private readonly ItemContext _context;
 
-        };
-
-        [HttpGet("{itemType:int}")]
-        public ItemModel[] Get(int itemType)
+        public ItemController(ItemContext context)
         {
-            ItemModel[] items = Items.Where(i => i.ItemType == itemType).ToArray();
-            return items;
+            _context = context;
+        }
+
+        // GET: api/Item
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ItemModel>>> GetRankingItems()
+        {
+          if (_context.RankingItems == null)
+          {
+              return NotFound();
+          }
+            return await _context.RankingItems.ToListAsync();
+        }
+
+        // GET: api/Item/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ItemModel>> GetItemModel(int id)
+        {
+          if (_context.RankingItems == null)
+          {
+              return NotFound();
+          }
+            var itemModel = await _context.RankingItems.FindAsync(id);
+
+            if (itemModel == null)
+            {
+                return NotFound();
+            }
+
+            return itemModel;
+        }
+
+        // PUT: api/Item/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutItemModel(int id, ItemModel itemModel)
+        {
+            if (id != itemModel.Id)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(itemModel).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ItemModelExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // POST: api/Item
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<ItemModel>> PostItemModel(ItemModel itemModel)
+        {
+          if (_context.RankingItems == null)
+          {
+              return Problem("Entity set 'ItemContext.RankingItems'  is null.");
+          }
+            _context.RankingItems.Add(itemModel);
+            await _context.SaveChangesAsync();
+
+            // return CreatedAtAction("GetItemModel", new { id = itemModel.Id }, itemModel);
+            return CreatedAtAction(nameof(GetItemModel), new { id = itemModel.Id }, itemModel);
+        }
+
+        // DELETE: api/Item/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteItemModel(int id)
+        {
+            if (_context.RankingItems == null)
+            {
+                return NotFound();
+            }
+            var itemModel = await _context.RankingItems.FindAsync(id);
+            if (itemModel == null)
+            {
+                return NotFound();
+            }
+
+            _context.RankingItems.Remove(itemModel);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool ItemModelExists(int id)
+        {
+            return (_context.RankingItems?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }

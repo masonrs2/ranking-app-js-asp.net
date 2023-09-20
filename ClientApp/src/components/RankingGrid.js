@@ -25,7 +25,7 @@
           ) : null}
         </div>
       );
-    } else {
+    } else { 
       cellCollection.push(
         <div className="row-label">
           <h4>{rowLabel}</h4>

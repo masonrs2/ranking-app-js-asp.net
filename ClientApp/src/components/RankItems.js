@@ -2,8 +2,9 @@
 import RankingGrid from "./RankingGrid";
 import ItemCollection from "./ItemCollection";
 
-const RankItems = ({ items, setItems, dataType, imgArr, localStorageKey }) => {
+const RankItems = ({ items, setItems, dataType, imgArr, localStorageKey, database }) => {
   const [reload, setReload] = useState(false);
+  const [update, setUpdate] = useState(false);
 
   function Reload() {
     setReload(true);
@@ -17,7 +18,47 @@ const RankItems = ({ items, setItems, dataType, imgArr, localStorageKey }) => {
     ev.preventDefault();
   }
 
-  function drop(ev) {
+  // function drop(ev) {
+  //   ev.preventDefault();
+  //   const targetElm = ev.target;
+  //   if (targetElm.nodeName === "IMG") {
+  //     return false;
+  //   }
+  //   if (targetElm.childNodes.length === 0) {
+  //     var data = parseInt(ev.dataTransfer.getData("text").substring(5));
+  //     const transformedCollection = items.map((item) =>
+  //       item.id === parseInt(data)
+  //         ? { ...item, ranking: parseInt(targetElm.id.substring(5)) }
+  //         : { ...item, ranking: item.ranking }
+  //     );
+  //     // setItems(transformedCollection);
+
+  //     // Update the item in the database
+  //     const updatedItem = transformedCollection.find(item => item.id === parseInt(data));
+  //     fetch(`/api/Item/${updatedItem.id}`, {
+  //       method: 'PUT',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify(updatedItem),
+  //     })
+  //     .then(response => response.json())
+  //     .then(data => console.log(data))
+  //     .catch((error) => {
+  //       console.error('Error:', error);
+  //     });
+
+  //     fetch("/api/Item")
+  //       .then((response) => response.json())
+  //       .then((data) => {
+  //         // Update the state with the fetched items
+  //         setItems(data);
+  //       })
+  //       .catch((error) => console.error("Error:", error));
+  //   }
+  // }
+
+  async function drop(ev) {
     ev.preventDefault();
     const targetElm = ev.target;
     if (targetElm.nodeName === "IMG") {
@@ -25,42 +66,55 @@ const RankItems = ({ items, setItems, dataType, imgArr, localStorageKey }) => {
     }
     if (targetElm.childNodes.length === 0) {
       var data = parseInt(ev.dataTransfer.getData("text").substring(5));
-      const transformedCollection = items.map((item) =>
-        item.id === parseInt(data)
-          ? { ...item, ranking: parseInt(targetElm.id.substring(5)) }
-          : { ...item, ranking: item.ranking }
-      );
-      setItems(transformedCollection);
+  
+      // Update the item in the database
+      const updatedItem = items.find(item => item.id === parseInt(data));
+      updatedItem.ranking = parseInt(targetElm.id.substring(5));
+      try {
+        const response = await fetch(`/api/${database}Item/${updatedItem.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updatedItem),
+        });
+  
+        if (response.ok) { // Check if the response is ok
+          const data = await response.text(); // Get the response as text
+  
+          if (data) { // If the response is not empty
+            const jsonData = JSON.parse(data); // Parse the response as JSON
+            console.log(jsonData);
+          }
+        } else {
+          console.error('Error:', response.status);
+        }
+  
+        // Fetch all items from the database
+        const responseAll = await fetch(`/api/${database}Item`);
+        const dataAll = await responseAll.json();
+        console.log("NEW FETCHED DATA",dataAll)
+        // Update the state with the fetched items
+        setItems(dataAll);
+        setUpdate(prevState => !prevState);
+      } catch (error) {
+        console.error('Error:', error);
+      }
     }
   }
-  useEffect(() => {
-    if (items == null) {
-      getDataFromApi();
-    }
-  }, [dataType]);
 
-  function getDataFromApi() {
-    fetch(`item/${dataType}`)
-      .then((results) => {
-        return results.json();
-      })
+  async function fetchItems() {
+    fetch(`/api/${database}Item`)
+      .then((response) => response.json())
       .then((data) => {
         setItems(data);
-      });
-  }
-
-  useEffect(() => {
-    if (items != null) {
-      localStorage.setItem(localStorageKey, JSON.stringify(items));
+        console.log("ITEM DATA:", data);
+      })
+      .catch((error) => console.error("Error:", error));
     }
-    setReload(false);
-  }, [items]);
-
   useEffect(() => {
-    if (reload === true) {
-      getDataFromApi();
-    }
-  }, [reload]);
+      fetchItems();
+  }, [update, items]);
 
   return items != null ? (
     <main>
@@ -76,6 +130,10 @@ const RankItems = ({ items, setItems, dataType, imgArr, localStorageKey }) => {
         {" "}
         <span className="text">Reload</span>{" "}
       </button>
+
+      <div>
+ 
+</div>
     </main>
   ) : (
     <main>Loading...</main>
