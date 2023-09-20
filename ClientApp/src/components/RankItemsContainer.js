@@ -57,7 +57,7 @@ const RankItemsContainer = ({ dataType, imgArr }) => {
   return (
     <RankItems
       items={itemData}
-      setItems={setFunc}
+      setItems={setItemData}
       dataType={dataType}
       imgArr={imgArr}
       database={database}

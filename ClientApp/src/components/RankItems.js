@@ -70,14 +70,27 @@ const RankItems = ({ items, setItems, dataType, imgArr, localStorageKey, databas
       // Update the item in the database
       const updatedItem = items.find(item => item.id === parseInt(data));
       updatedItem.ranking = parseInt(targetElm.id.substring(5));
+      
+      let response;
       try {
-        const response = await fetch(`/api/${database}Item/${updatedItem.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(updatedItem),
-        });
+        if(dataType == 1){
+          response = await fetch(`/api/${database}Item/${updatedItem.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updatedItem),
+          });
+        }
+        else if (dataType == 2){
+           response = await fetch(`/api/${database}Item/${updatedItem.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updatedItem),
+          });
+        }
   
         if (response.ok) { // Check if the response is ok
           const data = await response.text(); // Get the response as text
@@ -114,7 +127,7 @@ const RankItems = ({ items, setItems, dataType, imgArr, localStorageKey, databas
     }
   useEffect(() => {
       fetchItems();
-  }, [update, items]);
+  }, [update]);
 
   return items != null ? (
     <main>
