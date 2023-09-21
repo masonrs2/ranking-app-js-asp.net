@@ -73,8 +73,9 @@ const RankItems = ({ items, setItems, dataType, imgArr, localStorageKey, databas
       
       let response;
       try {
+        
         if(dataType == 1){
-          response = await fetch(`/api/${database}Item/${updatedItem.id}`, {
+          response = await fetch(`/api/MovieItem/${updatedItem.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -83,7 +84,7 @@ const RankItems = ({ items, setItems, dataType, imgArr, localStorageKey, databas
           });
         }
         else if (dataType == 2){
-           response = await fetch(`/api/${database}Item/${updatedItem.id}`, {
+           response = await fetch(`/api/AlbumItem/${updatedItem.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -102,7 +103,7 @@ const RankItems = ({ items, setItems, dataType, imgArr, localStorageKey, databas
         } else {
           console.error('Error:', response.status);
         }
-  
+
         // Fetch all items from the database
         const responseAll = await fetch(`/api/${database}Item`);
         const dataAll = await responseAll.json();
@@ -117,13 +118,15 @@ const RankItems = ({ items, setItems, dataType, imgArr, localStorageKey, databas
   }
 
   async function fetchItems() {
-    fetch(`/api/${database}Item`)
-      .then((response) => response.json())
-      .then((data) => {
-        setItems(data);
-        console.log("ITEM DATA:", data);
-      })
-      .catch((error) => console.error("Error:", error));
+    if(database){
+      fetch(`/api/${database}Item`)
+        .then((response) => response.json())
+        .then((data) => {
+          setItems(data);
+          console.log("ITEM DATA:", data);
+        })
+        .catch((error) => console.error("Error:", error));
+      }
     }
   useEffect(() => {
       fetchItems();
