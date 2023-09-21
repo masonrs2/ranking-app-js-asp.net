@@ -10,6 +10,47 @@ const RankItems = ({ items, setItems, dataType, imgArr, localStorageKey, databas
     setReload(true);
   }
 
+  
+  async function resetRankings() {
+  // Create a new array where each item's ranking is set to 0
+  const updatedItems = items.map(item => ({ ...item, ranking: 0 }));
+
+  // Update each item in the database
+  for (const item of updatedItems) {
+    let response;
+    try {
+      if(dataType == 1){
+        response = await fetch(`/api/MovieItem/${item.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(item),
+        });
+      }
+      else if (dataType == 2){
+         response = await fetch(`/api/AlbumItem/${item.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(item),
+        });
+      }
+
+      if (!response.ok) {
+        console.error('Error:', response.status);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+
+  // Update the state with the updated items
+  setItems(updatedItems);
+  setUpdate(prevState => !prevState);
+}
+
   function drag(ev) {
     ev.dataTransfer.setData("text", ev.target.id);
   }
@@ -142,7 +183,7 @@ const RankItems = ({ items, setItems, dataType, imgArr, localStorageKey, databas
         drop={drop}
       />
       <ItemCollection items={items} drag={drag} imgArr={imgArr} />
-      <button onClick={Reload} className="reload" style={{ marginTop: "10px" }}>
+      <button onClick={resetRankings} className="reload" style={{ marginTop: "10px" }}>
         {" "}
         <span className="text">Reload</span>{" "}
       </button>
