@@ -122,12 +122,8 @@ namespace RankingApp.Controllers
         {
             return _context.MovieItems.Any(e => e.Id == id);
         }
-        // public IActionResult Index()
-        // {
-        //     // Populate the user details from DB
-        //     var user = GetUserDetails();
-        //     MovieItemModelDTO movieItemModelDTO = _mapper.Map<MovieItemModelDTO>(user);
-        //     return View(movieItemModelDTO);
-        // }
+
+        //
+    
     }
 }

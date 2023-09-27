@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using RankingApp.Models;
+using RankingApp.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +19,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(typeof(Program)); 
 builder.Services.AddControllersWithViews();
+builder.Services.AddControllers()
+    .AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<MovieItemValidator>());
+
+builder.Services.AddControllers()
+    .AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<AlbumItemValidator>());
 
 var app = builder.Build();
 
