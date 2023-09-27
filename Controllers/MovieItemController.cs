@@ -1,5 +1,7 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using RankingApp.Models;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,26 +14,30 @@ namespace RankingApp.Controllers
     public class MovieItemController : ControllerBase
     {
         private readonly ItemContext _context;
+        private readonly IMapper _mapper;
 
-        public MovieItemController(ItemContext context)
+        public MovieItemController(ItemContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         // GET: api/AlbumItem
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<MovieItemModel>>> GetMovieItems()
+        public async Task<ActionResult<IEnumerable<MovieItemModelDTO>>> GetMovieItems()
         {
-            return await _context.MovieItems.ToListAsync();
+            var movieItems = await _context.MovieItems.ToListAsync();
+            var movieItemDTOs = _mapper.Map<List<MovieItemModelDTO>>(movieItems);
+            return movieItemDTOs;
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<MovieItemModel>> GetItemModel(int id)
+        public async Task<ActionResult<MovieItemModelDTO>> GetItemModel(int id)
         {
-          if (_context.MovieItems == null)
-          {
-              return NotFound();
-          }
+            if (_context.MovieItems == null)
+            {
+                return NotFound();
+            }
             var itemModel = await _context.MovieItems.FindAsync(id);
 
             if (itemModel == null)
@@ -39,7 +45,9 @@ namespace RankingApp.Controllers
                 return NotFound();
             }
 
-            return itemModel;
+            MovieItemModelDTO movieItemModelDTO = _mapper.Map<MovieItemModelDTO>(itemModel);
+
+            return movieItemModelDTO;
         }
 
         // PUT: api/AlbumItem/5
@@ -72,15 +80,15 @@ namespace RankingApp.Controllers
             return NoContent();
         }
 
-         // POST: api/Item
+        // POST: api/Item
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<MovieItemModel>> PostItemModel(MovieItemModel itemModel)
         {
-          if (_context.MovieItems == null)
-          {
-              return Problem("Entity set 'ItemContext.RankingItems'  is null.");
-          }
+            if (_context.MovieItems == null)
+            {
+                return Problem("Entity set 'ItemContext.RankingItems'  is null.");
+            }
             _context.MovieItems.Add(itemModel);
             await _context.SaveChangesAsync();
 
@@ -114,5 +122,12 @@ namespace RankingApp.Controllers
         {
             return _context.MovieItems.Any(e => e.Id == id);
         }
+        // public IActionResult Index()
+        // {
+        //     // Populate the user details from DB
+        //     var user = GetUserDetails();
+        //     MovieItemModelDTO movieItemModelDTO = _mapper.Map<MovieItemModelDTO>(user);
+        //     return View(movieItemModelDTO);
+        // }
     }
 }

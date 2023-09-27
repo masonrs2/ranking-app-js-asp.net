@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RankingApp.Models;
@@ -12,21 +13,25 @@ namespace RankingApp.Controllers
     public class AlbumItemController : ControllerBase
     {
         private readonly ItemContext _context;
+        private readonly IMapper _mapper;
 
-        public AlbumItemController(ItemContext context)
+        public AlbumItemController(ItemContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         // GET: api/AlbumItem
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AlbumItemModel>>> GetAlbumItems()
+        public async Task<ActionResult<IEnumerable<AlbumItemModelDTO>>> GetAlbumItems()
         {
-            return await _context.AlbumItems.ToListAsync();
+            var albumItems = await _context.AlbumItems.ToListAsync();
+            var albumItemDTOs = _mapper.Map<List<AlbumItemModelDTO>>(albumItems);
+            return albumItemDTOs;
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<AlbumItemModel>> GetItemModel(int id)
+        public async Task<ActionResult<AlbumItemModelDTO>> GetItemModel(int id)
         {
           if (_context.AlbumItems == null)
           {
@@ -39,7 +44,8 @@ namespace RankingApp.Controllers
                 return NotFound();
             }
 
-            return itemModel;
+            AlbumItemModelDTO albumItemModelDTO = _mapper.Map<AlbumItemModelDTO>(itemModel);
+            return albumItemModelDTO;
         }
 
         // PUT: api/AlbumItem/5
