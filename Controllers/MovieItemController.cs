@@ -1,7 +1,9 @@
 using AutoMapper;
+using RankingApp.IRepository;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using RankingApp.MovieItemRepository;
 using RankingApp.Models;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,30 +17,33 @@ namespace RankingApp.Controllers
     {
         private readonly ItemContext _context;
         private readonly IMapper _mapper;
+        private IMovieItemRepository movieItemRepository;
+
+        // public MovieItemController()
+        // {
+        //     this.movieItemRepository = new RankingApp.MovieItemRepository.MovieItemRepository(_context);
+        // }
 
         public MovieItemController(ItemContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
+            this.movieItemRepository = new RankingApp.MovieItemRepository.MovieItemRepository(context);
         }
 
-        // GET: api/AlbumItem
+        // GET: api/MovieItem
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<MovieItemModelDTO>>> GetMovieItems()
+        public ActionResult<IEnumerable<MovieItemModelDTO>> GetMovieItems()
         {
-            var movieItems = await _context.MovieItems.ToListAsync();
+            var movieItems = movieItemRepository.GetMovies();
             var movieItemDTOs = _mapper.Map<List<MovieItemModelDTO>>(movieItems);
             return movieItemDTOs;
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<MovieItemModelDTO>> GetItemModel(int id)
+        public ActionResult<MovieItemModelDTO> GetItemModel(int id)
         {
-            if (_context.MovieItems == null)
-            {
-                return NotFound();
-            }
-            var itemModel = await _context.MovieItems.FindAsync(id);
+            var itemModel = movieItemRepository.GetMovieByID(id);
 
             if (itemModel == null)
             {
@@ -52,18 +57,17 @@ namespace RankingApp.Controllers
 
         // PUT: api/AlbumItem/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutMovieItemModel(int id, MovieItemModel MovieItemModel)
+        public IActionResult PutMovieItemModel(int id, MovieItemModel MovieItemModel)
         {
             if (id != MovieItemModel.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(MovieItemModel).State = EntityState.Modified;
-
+            movieItemRepository.UpdateMovie(MovieItemModel);
             try
             {
-                await _context.SaveChangesAsync();
+                movieItemRepository.Save();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -83,35 +87,26 @@ namespace RankingApp.Controllers
         // POST: api/Item
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<MovieItemModel>> PostItemModel(MovieItemModel itemModel)
+        public ActionResult<MovieItemModel> PostItemModel(MovieItemModel itemModel)
         {
-            if (_context.MovieItems == null)
-            {
-                return Problem("Entity set 'ItemContext.RankingItems'  is null.");
-            }
-            _context.MovieItems.Add(itemModel);
-            await _context.SaveChangesAsync();
+            movieItemRepository.InsertMovie(itemModel);
+            movieItemRepository.Save();
 
-            // return CreatedAtAction("GetItemModel", new { id = itemModel.Id }, itemModel);
             return CreatedAtAction(nameof(GetItemModel), new { id = itemModel.Id }, itemModel);
         }
 
         // DELETE: api/Item/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteItemModel(int id)
+        public IActionResult DeleteItemModel(int id)
         {
-            if (_context.MovieItems == null)
-            {
-                return NotFound();
-            }
-            var itemModel = await _context.MovieItems.FindAsync(id);
+            var itemModel = movieItemRepository.GetMovieByID(id);
             if (itemModel == null)
             {
                 return NotFound();
             }
 
-            _context.MovieItems.Remove(itemModel);
-            await _context.SaveChangesAsync();
+            movieItemRepository.DeleteMovie(id);
+            movieItemRepository.Save();
 
             return NoContent();
         }
@@ -120,10 +115,10 @@ namespace RankingApp.Controllers
 
         private bool MovieItemModelExists(int id)
         {
-            return _context.MovieItems.Any(e => e.Id == id);
+            return movieItemRepository.GetMovieByID(id) != null;
         }
 
         //
-    
+
     }
 }
