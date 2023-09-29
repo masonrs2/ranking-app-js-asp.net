@@ -8,6 +8,7 @@ using RankingApp.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using RankingApp.UnitOfWork;
 
 namespace RankingApp.Controllers
 {
@@ -17,25 +18,20 @@ namespace RankingApp.Controllers
     {
         private readonly ItemContext _context;
         private readonly IMapper _mapper;
-        private IMovieItemRepository movieItemRepository;
+        private RankingApp.UnitOfWork.UnitOfWork _unitOfWork;
 
-        // public MovieItemController()
-        // {
-        //     this.movieItemRepository = new RankingApp.MovieItemRepository.MovieItemRepository(_context);
-        // }
-
-        public MovieItemController(ItemContext context, IMapper mapper)
+        public MovieItemController(ItemContext context, IMapper mapper, RankingApp.UnitOfWork.UnitOfWork unitOfWork)
         {
             _context = context;
             _mapper = mapper;
-            this.movieItemRepository = new RankingApp.MovieItemRepository.MovieItemRepository(context);
+            _unitOfWork = unitOfWork;
         }
 
         // GET: api/MovieItem
         [HttpGet]
         public ActionResult<IEnumerable<MovieItemModelDTO>> GetMovieItems()
         {
-            var movieItems = movieItemRepository.GetMovies();
+            var movieItems = _unitOfWork.MovieItemRepository.Get();
             var movieItemDTOs = _mapper.Map<List<MovieItemModelDTO>>(movieItems);
             return movieItemDTOs;
         }
@@ -43,7 +39,7 @@ namespace RankingApp.Controllers
         [HttpGet("{id}")]
         public ActionResult<MovieItemModelDTO> GetItemModel(int id)
         {
-            var itemModel = movieItemRepository.GetMovieByID(id);
+            var itemModel = _unitOfWork.MovieItemRepository.GetByID(id);
 
             if (itemModel == null)
             {
@@ -64,10 +60,10 @@ namespace RankingApp.Controllers
                 return BadRequest();
             }
 
-            movieItemRepository.UpdateMovie(MovieItemModel);
             try
             {
-                movieItemRepository.Save();
+                _unitOfWork.MovieItemRepository.Update(MovieItemModel);
+                _unitOfWork.Save();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -89,8 +85,8 @@ namespace RankingApp.Controllers
         [HttpPost]
         public ActionResult<MovieItemModel> PostItemModel(MovieItemModel itemModel)
         {
-            movieItemRepository.InsertMovie(itemModel);
-            movieItemRepository.Save();
+            _unitOfWork.MovieItemRepository.Insert(itemModel);
+            _unitOfWork.Save();
 
             return CreatedAtAction(nameof(GetItemModel), new { id = itemModel.Id }, itemModel);
         }
@@ -99,14 +95,14 @@ namespace RankingApp.Controllers
         [HttpDelete("{id}")]
         public IActionResult DeleteItemModel(int id)
         {
-            var itemModel = movieItemRepository.GetMovieByID(id);
+            var itemModel = _unitOfWork.MovieItemRepository.GetByID(id);
             if (itemModel == null)
             {
                 return NotFound();
             }
 
-            movieItemRepository.DeleteMovie(id);
-            movieItemRepository.Save();
+            _unitOfWork.MovieItemRepository.Delete(id);
+            _unitOfWork.Save();
 
             return NoContent();
         }
@@ -115,7 +111,7 @@ namespace RankingApp.Controllers
 
         private bool MovieItemModelExists(int id)
         {
-            return movieItemRepository.GetMovieByID(id) != null;
+            return _unitOfWork.MovieItemRepository.Get(e => e.Id == id).Any();
         }
 
         //

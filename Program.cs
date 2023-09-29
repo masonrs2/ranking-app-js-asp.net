@@ -3,6 +3,7 @@ using System.Linq;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using RankingApp.Models;
+using RankingApp.UnitOfWork;
 using RankingApp.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,7 +25,8 @@ builder.Services.AddControllers()
 
 builder.Services.AddControllers()
     .AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<AlbumItemValidator>());
-
+    
+builder.Services.AddScoped<UnitOfWork>();
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
